@@ -57,7 +57,8 @@ def get_users():
 @app.route('/user/favorites', methods=['GET'])
 def get_favorites():
     try:
-        user = User.query.first()
+        request_data = request.json
+        user = db.session.execute(db.select(User).filter_by(id=request_data["user_id"])).scalar_one()
         if not user:
             return jsonify({'error': 'No users found'}), 404
         
@@ -146,12 +147,24 @@ def delete_people(id):
 @app.route('/favorites/people/<int:id>', methods=['POST'])
 def post_people_favorite(id):
     try:
-        user = User.query.first()
+        request_data = request.json
+        user = db.session.execute(db.select(User).filter_by(id=request_data["user_id"])).scalar_one()
+
         if not user:
             return jsonify({'error': 'No users found'}), 404
         
         people = db.session.execute(db.select(People).filter_by(id=id)).scalar_one().serialize()
+        favs = db.session.execute(db.select(Favorites).filter_by(user_id=request_data["user_id"], people_id=people["id"])).all()
+        
+        if (len(favs) != 0):
+            response_body = {
+                "msg": "Person was already among your favourites"
+            }
+
+            return jsonify(response_body), 400
+        
         fav = Favorites(user_id=user.id, people_id=people["id"])
+        
         db.session.add(fav)
         db.session.commit()
 
@@ -167,7 +180,9 @@ def post_people_favorite(id):
 
 @app.route('/favorites/people/<int:id>', methods=['DELETE'])
 def delete_favorite_people(id):
-    user = User.query.first()
+    request_data = request.json
+    user = db.session.execute(db.select(User).filter_by(id=request_data["user_id"])).scalar_one()
+
     if not user:
         return jsonify({'error': 'No users found'}), 404
 
@@ -249,11 +264,22 @@ def delete_planets(id):
 @app.route('/favorites/planets/<int:id>', methods=['POST'])
 def post_planet_favorite(id):
     try:
-        user = User.query.first()
+        request_data = request.json
+        user = db.session.execute(db.select(User).filter_by(id=request_data["user_id"])).scalar_one()
+
         if not user:
             return jsonify({'error': 'No users found'}), 404
         
         planets = db.session.execute(db.select(Planets).filter_by(id=id)).scalar_one().serialize()
+        favs = db.session.execute(db.select(Favorites).filter_by(user_id=request_data["user_id"], planets_id=planets["id"])).all()
+        
+        if (len(favs) != 0):
+            response_body = {
+                "msg": "Person was already among your favourites"
+            }
+
+            return jsonify(response_body), 400
+        
         fav = Favorites(user_id=user.id, planets_id=planets["id"])
         db.session.add(fav)
         db.session.commit()
@@ -269,7 +295,9 @@ def post_planet_favorite(id):
 
 @app.route('/favorites/planets/<int:id>', methods=['DELETE'])
 def delete_favorite_planet(id):
-    user = User.query.first()
+    request_data = request.json
+    user = db.session.execute(db.select(User).filter_by(id=request_data["user_id"])).scalar_one()
+    
     if not user:
         return jsonify({'error': 'No users found'}), 404
 
