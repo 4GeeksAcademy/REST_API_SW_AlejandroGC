@@ -57,8 +57,8 @@ def get_users():
 @app.route('/user/favorites', methods=['GET'])
 def get_favorites():
     try:
-        request_data = request.json
-        user = db.session.execute(db.select(User).filter_by(id=request_data["user_id"])).scalar_one()
+        user = db.session.scalars(db.select(User)).first()
+        print(user)
         if not user:
             return jsonify({'error': 'No users found'}), 404
         
